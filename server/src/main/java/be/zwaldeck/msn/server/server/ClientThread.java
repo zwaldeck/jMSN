@@ -202,11 +202,6 @@ public class ClientThread extends Thread {
             contacts.add(DataConverter.convertUser(contact.getContact()));
         }
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         output.writeObject(new ServerMessage(ServerMessageType.BOOT, contacts));
     }
 }
