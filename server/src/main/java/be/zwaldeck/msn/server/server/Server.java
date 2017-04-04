@@ -2,6 +2,7 @@ package be.zwaldeck.msn.server.server;
 
 import be.zwaldeck.msn.common.Constants;
 import be.zwaldeck.msn.server.MsnServer;
+import be.zwaldeck.msn.server.dao.ContactDao;
 import be.zwaldeck.msn.server.dao.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,9 @@ public class Server {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private ContactDao contactDao;
 
     private boolean keepGoing;
     private ArrayList<ClientThread> clients;
@@ -40,7 +44,7 @@ public class Server {
                     break;
                 }
 
-                ClientThread ct = new ClientThread(this, socket, userDao);
+                ClientThread ct = new ClientThread(this, socket, userDao, contactDao);
                 clients.add(ct);
                 ct.start();
             }

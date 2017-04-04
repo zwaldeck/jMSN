@@ -3,10 +3,13 @@ package be.zwaldeck.msn.server.server;
 import be.zwaldeck.msn.common.Status;
 import be.zwaldeck.msn.common.messages.ServerMessage;
 import be.zwaldeck.msn.common.messages.ServerMessageType;
+import be.zwaldeck.msn.common.messages.data.AddContactData;
 import be.zwaldeck.msn.common.messages.data.LoginData;
 import be.zwaldeck.msn.common.messages.data.RegisterData;
 import be.zwaldeck.msn.common.messages.data.UserData;
+import be.zwaldeck.msn.server.dao.ContactDao;
 import be.zwaldeck.msn.server.dao.UserDao;
+import be.zwaldeck.msn.server.dao.impl.ContactDaoImpl;
 import be.zwaldeck.msn.server.domain.Contact;
 import be.zwaldeck.msn.server.domain.User;
 import be.zwaldeck.msn.server.util.DataConverter;
@@ -30,16 +33,23 @@ public class ClientThread extends Thread {
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
+
     private String id;
     private ServerMessage sm;
     private boolean keepGoing = false;
+
     private UserDao userDao;
+    private ContactDao contactDao;
     private User user; //the user associated with this thread after login
 
-    public ClientThread(Server server, Socket socket, UserDao userDao) {
+
+    public ClientThread(Server server, Socket socket, UserDao userDao, ContactDao contactDao) {
         this.server = server;
         this.socket = socket;
+
         this.userDao = userDao;
+        this.contactDao = contactDao;
+
         id = UUID.randomUUID().toString();
 
         System.out.println("Client connected with id: " + id);
@@ -61,7 +71,7 @@ public class ClientThread extends Thread {
             try {
                 sm = (ServerMessage) input.readObject();
             } catch (IOException e) {
-                if(!(e instanceof EOFException)) {
+                if (!(e instanceof EOFException)) {
                     e.printStackTrace();
                 }
             } catch (ClassNotFoundException e) {
@@ -69,14 +79,13 @@ public class ClientThread extends Thread {
                 break;
             }
 
-            if(sm != null) {
+            if (sm != null) {
                 try {
                     handleServerMessage();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-            else {
+            } else {
                 keepGoing = false;
             }
         }
@@ -98,7 +107,7 @@ public class ClientThread extends Thread {
             e.printStackTrace();
         }
 
-        if(user != null) {
+        if (user != null) {
             user.setStatus(Status.OFFLINE);
             userDao.update(user);
         }
@@ -123,9 +132,10 @@ public class ClientThread extends Thread {
             case BOOT:
                 handleBoot();
                 break;
-            case ADD_CONTACTS:
+            case ADD_CONTACT:
+                handleAddContact();
                 break;
-            case REMOVE_CONTACTS:
+            case REMOVE_CONTACT:
                 break;
             case UPDATE_NICKNAME:
                 break;
@@ -144,13 +154,13 @@ public class ClientThread extends Thread {
     private void handleRegister() throws IOException {
         //TODO Email activation shit
         String ip = NetworkUtils.getExternalIp();
-        if(ip == null) {
+        if (ip == null) {
             output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
             return;
         }
 
         RegisterData data = (RegisterData) sm.getData();
-        if(userDao.getUserByEmail(data.getEmail()) != null) {
+        if (userDao.getUserByEmail(data.getEmail()) != null) {
             output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "This email is already used."));
             return;
         }
@@ -172,19 +182,19 @@ public class ClientThread extends Thread {
     private void handleLogin() throws IOException {
         LoginData data = (LoginData) sm.getData();
         User user = userDao.getUserByEmail(data.getEmail());
-        if(user == null) {
+        if (user == null) {
             output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "We could not find a user with this email."));
             return;
         }
 
-        if(!BCrypt.checkpw(data.getPassword(), user.getPassword())) {
+        if (!BCrypt.checkpw(data.getPassword(), user.getPassword())) {
             output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "The password was not correct."));
             return;
         }
 
         //update the status and ip
         String ip = NetworkUtils.getExternalIp();
-        if(ip == null) {
+        if (ip == null) {
             output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
             return;
         }
@@ -198,10 +208,34 @@ public class ClientThread extends Thread {
 
     private void handleBoot() throws IOException {
         ArrayList<UserData> contacts = new ArrayList<>();
-        for(Contact contact : user.getContacts()) {
+        for (Contact contact : user.getContacts()) {
             contacts.add(DataConverter.convertUser(contact.getContact()));
         }
 
         output.writeObject(new ServerMessage(ServerMessageType.BOOT, contacts));
+    }
+
+    private void handleAddContact() throws IOException {
+        AddContactData contactData = (AddContactData) sm.getData();
+        User userToAdd = userDao.getUserByEmail(contactData.getEmail());
+        if (userToAdd == null) {
+            output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_FAILED, "We could not find that user."));
+            return;
+        }
+
+        for (Contact c : user.getContacts()) {
+            if (c.getContact().getId().intValue() == userToAdd.getId().intValue()) {
+                output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_FAILED, "You already added this user to your contacts."));
+                return;
+            }
+        }
+
+        Contact contact = new Contact();
+        contact.setOwner(this.user);
+        contact.setContact(userToAdd);
+
+        contactDao.create(contact);
+
+        output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_SUCCESS, null));
     }
 }

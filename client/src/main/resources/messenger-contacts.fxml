@@ -108,11 +108,11 @@
             </Accordion>
             <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
                <children>
-                  <TextField promptText="Search a contact" HBox.hgrow="ALWAYS">
+                  <TextField promptText="Search contacts" HBox.hgrow="ALWAYS">
                      <HBox.margin>
                         <Insets left="5.0" right="5.0" />
                      </HBox.margin></TextField>
-                  <Button contentDisplay="GRAPHIC_ONLY" maxHeight="26.0" maxWidth="26.0" minHeight="26.0" minWidth="26.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="26.0" styleClass="add-contact-button" text="Button" HBox.hgrow="NEVER">
+                  <Button contentDisplay="GRAPHIC_ONLY" maxHeight="26.0" maxWidth="26.0" minHeight="26.0" minWidth="26.0" mnemonicParsing="false" onAction="#handleAddContact" prefHeight="26.0" prefWidth="26.0" styleClass="add-contact-button" text="Button" HBox.hgrow="NEVER">
                      <HBox.margin>
                         <Insets bottom="5.0" right="5.0" />
                      </HBox.margin>
