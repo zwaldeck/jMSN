@@ -99,7 +99,7 @@
                      <content>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                            <center>
-                              <ListView fx:id="offlineLv" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+                              <ListView fx:id="offlineLv" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #FFFFFF;" stylesheets="@css/listview.css" BorderPane.alignment="CENTER" />
                            </center>
                         </BorderPane>
                      </content>

@@ -22,7 +22,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @Author Wout Schoovaerts
@@ -119,6 +121,8 @@ public class ClientThread extends Thread {
 
     /**
      * Here we handle the server messages that can be handled by the server
+     *
+     * TODO split up in handler classes
      */
     private void handleServerMessage() throws IOException {
         System.out.println("Handeling message for " + id + " with type: " + sm.getType().toString());
@@ -195,7 +199,7 @@ public class ClientThread extends Thread {
         //update the status and ip
         String ip = NetworkUtils.getExternalIp();
         if (ip == null) {
-            output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
+            output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
             return;
         }
         user.setIp(ip);
@@ -207,10 +211,9 @@ public class ClientThread extends Thread {
     }
 
     private void handleBoot() throws IOException {
-        ArrayList<UserData> contacts = new ArrayList<>();
-        for (Contact contact : user.getContacts()) {
-            contacts.add(DataConverter.convertUser(contact.getContact()));
-        }
+        List<UserData> contacts = mapContactListToUserList(contactDao.getContacts(user)).stream()
+                .map(DataConverter::convertUser)
+                .collect(Collectors.toList());
 
         output.writeObject(new ServerMessage(ServerMessageType.BOOT, contacts));
     }
@@ -223,8 +226,8 @@ public class ClientThread extends Thread {
             return;
         }
 
-        for (Contact c : user.getContacts()) {
-            if (c.getContact().getId().intValue() == userToAdd.getId().intValue()) {
+        for (User u : mapContactListToUserList(contactDao.getContacts(user))) {
+            if (u.getId().intValue() == userToAdd.getId().intValue()) {
                 output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_FAILED, "You already added this user to your contacts."));
                 return;
             }
@@ -237,5 +240,11 @@ public class ClientThread extends Thread {
         contactDao.create(contact);
 
         output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_SUCCESS, null));
+    }
+
+    private List<User> mapContactListToUserList(List<Contact> contacts) {
+        return contacts.stream()
+                .map(Contact::getContact)
+                .collect(Collectors.toList());
     }
 }

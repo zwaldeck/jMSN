@@ -31,7 +31,6 @@ public class BootingController extends GuiController {
                     });
 
                     bs.setOnSucceeded(event -> {
-                        System.out.println(ApplicationData.getInstance().getContacts());
                         try {
                             NavigationUtil.openFxmlInSameScene(primaryStage, "/messenger-contacts.fxml", 400, 800);
                         } catch (IOException e) {

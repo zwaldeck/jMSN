@@ -38,9 +38,6 @@ public class User implements Serializable {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @OneToMany(mappedBy = "contact", fetch = FetchType.EAGER)
-    private List<Contact> contacts;
-
     public Integer getId() {
         return id;
     }
@@ -99,9 +96,5 @@ public class User implements Serializable {
 
     public void setStatus(Status status) {
         this.status = status;
-    }
-
-    public List<Contact> getContacts() {
-        return contacts;
     }
 }

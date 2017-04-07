@@ -30,9 +30,7 @@ public class BootService extends Service<Boolean> {
             @Override
             protected Boolean call() throws Exception {
                 connection.sendMessage(new ServerMessage(ServerMessageType.BOOT, null));
-                System.out.println("Waiting for response");
                 ServerMessage sm = connection.waitForMessageFromServer();
-                System.out.println(sm.getType().toString());
                 if(sm.getType() == ServerMessageType.BOOT) {
                     ApplicationData.getInstance().setContacts((ArrayList<UserData>) sm.getData());
                     return true;
