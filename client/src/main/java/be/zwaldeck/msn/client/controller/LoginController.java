@@ -41,17 +41,24 @@ public class LoginController extends GuiController {
     @FXML
     private Label errorLbl;
 
+    private Preferences prefs;
+
+    public LoginController() {
+        this.prefs = Preferences.userNodeForPackage(MsnClient.class);;
+    }
+
     @Override
     public void init(Stage stage) {
         super.init(stage);
-        Preferences prefs = Preferences.userNodeForPackage(MsnClient.class);
         String email = prefs.get(PreferencesConstants.LOGIN_EMAIL, "");
         String password = prefs.get(PreferencesConstants.LOGIN_PASSWORD, "");
         if(!email.isEmpty()) {
+            rememberMeCb.setSelected(true);
             emailTxt.setText(email);
         }
 
         if(!password.isEmpty()) {
+            rememberMeCb.setSelected(true);
             passwordTxt.setText(password);
         }
     }
@@ -68,9 +75,12 @@ public class LoginController extends GuiController {
         if (!formErrors()) {
 
             if(rememberMeCb.isSelected()) {
-                Preferences prefs = Preferences.userNodeForPackage(MsnClient.class);
                 prefs.put(PreferencesConstants.LOGIN_EMAIL, emailTxt.getText().trim());
                 prefs.put(PreferencesConstants.LOGIN_PASSWORD, passwordTxt.getText().trim());
+            }
+            else {
+                prefs.put(PreferencesConstants.LOGIN_EMAIL,"");
+                prefs.put(PreferencesConstants.LOGIN_PASSWORD, "");
             }
 
             LoginData data = new LoginData(emailTxt.getText().trim(), passwordTxt.getText().trim());
