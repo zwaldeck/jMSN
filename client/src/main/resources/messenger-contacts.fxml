@@ -84,22 +84,13 @@
                   </VBox>
                </children>
             </GridPane>
-            <Accordion GridPane.rowIndex="2">
+            <Accordion fx:id="groupsContainer" GridPane.rowIndex="2">
               <panes>
-                <TitledPane animated="false" text="Online">
+                <TitledPane animated="false" text="Friends">
                      <content>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                            <center>
-                              <ListView fx:id="onlineLv" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
-                           </center>
-                        </BorderPane>
-                     </content>
-                </TitledPane>
-                <TitledPane animated="false" text="Offline">
-                     <content>
-                        <BorderPane prefHeight="200.0" prefWidth="200.0">
-                           <center>
-                              <ListView fx:id="offlineLv" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: #FFFFFF;" stylesheets="@css/listview.css" BorderPane.alignment="CENTER" />
+                              <ListView fx:id="friendsLv" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
                            </center>
                         </BorderPane>
                      </content>

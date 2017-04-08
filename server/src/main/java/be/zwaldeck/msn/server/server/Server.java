@@ -1,9 +1,9 @@
 package be.zwaldeck.msn.server.server;
 
 import be.zwaldeck.msn.common.Constants;
-import be.zwaldeck.msn.server.MsnServer;
-import be.zwaldeck.msn.server.dao.ContactDao;
-import be.zwaldeck.msn.server.dao.UserDao;
+import be.zwaldeck.msn.server.server.handler.BootHandler;
+import be.zwaldeck.msn.server.server.handler.ContactHandler;
+import be.zwaldeck.msn.server.server.handler.RegistrationLoginHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,17 +19,21 @@ import java.util.Iterator;
 @Component
 public class Server {
 
-    @Autowired
-    private UserDao userDao;
-
-    @Autowired
-    private ContactDao contactDao;
+    private final RegistrationLoginHandler registrationLoginHandler;
+    private final BootHandler bootHandler;
+    private final ContactHandler contactHandler;
 
     private boolean keepGoing;
     private ArrayList<ClientThread> clients;
 
-    public Server() {
+    @Autowired
+    public Server(RegistrationLoginHandler registrationLoginHandler,
+                  BootHandler bootHandler, ContactHandler contactHandler) {
         clients = new ArrayList<>();
+
+        this.registrationLoginHandler = registrationLoginHandler;
+        this.bootHandler = bootHandler;
+        this.contactHandler = contactHandler;
     }
 
     public void start() {
@@ -44,7 +48,11 @@ public class Server {
                     break;
                 }
 
-                ClientThread ct = new ClientThread(this, socket, userDao, contactDao);
+                ClientThread ct = new ClientThread(this, socket,
+                        registrationLoginHandler,
+                        bootHandler,
+                        contactHandler
+                );
                 clients.add(ct);
                 ct.start();
             }

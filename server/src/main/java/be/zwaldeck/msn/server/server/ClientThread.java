@@ -5,13 +5,12 @@ import be.zwaldeck.msn.common.messages.ServerMessage;
 import be.zwaldeck.msn.common.messages.ServerMessageType;
 import be.zwaldeck.msn.common.messages.data.AddContactData;
 import be.zwaldeck.msn.common.messages.data.LoginData;
-import be.zwaldeck.msn.common.messages.data.RegisterData;
 import be.zwaldeck.msn.common.messages.data.UserData;
-import be.zwaldeck.msn.server.dao.ContactDao;
-import be.zwaldeck.msn.server.dao.UserDao;
-import be.zwaldeck.msn.server.dao.impl.ContactDaoImpl;
 import be.zwaldeck.msn.server.domain.Contact;
 import be.zwaldeck.msn.server.domain.User;
+import be.zwaldeck.msn.server.server.handler.BootHandler;
+import be.zwaldeck.msn.server.server.handler.ContactHandler;
+import be.zwaldeck.msn.server.server.handler.RegistrationLoginHandler;
 import be.zwaldeck.msn.server.util.DataConverter;
 import be.zwaldeck.msn.server.util.NetworkUtils;
 import org.mindrot.jbcrypt.BCrypt;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,17 +38,24 @@ public class ClientThread extends Thread {
     private ServerMessage sm;
     private boolean keepGoing = false;
 
-    private UserDao userDao;
-    private ContactDao contactDao;
     private User user; //the user associated with this thread after login
 
+    //handlers
+    private final RegistrationLoginHandler registrationLoginHandler;
+    private final BootHandler bootHandler;
+    private final ContactHandler contactHandler;
 
-    public ClientThread(Server server, Socket socket, UserDao userDao, ContactDao contactDao) {
+    //inject all handlers in the constructor
+    public ClientThread(Server server, Socket socket,
+                        RegistrationLoginHandler registrationLoginHandler,
+                        BootHandler bootHandler, ContactHandler contactHandler) {
         this.server = server;
         this.socket = socket;
 
-        this.userDao = userDao;
-        this.contactDao = contactDao;
+        //handlers
+        this.registrationLoginHandler = registrationLoginHandler;
+        this.bootHandler = bootHandler;
+        this.contactHandler = contactHandler;
 
         id = UUID.randomUUID().toString();
 
@@ -110,8 +115,7 @@ public class ClientThread extends Thread {
         }
 
         if (user != null) {
-            user.setStatus(Status.OFFLINE);
-            userDao.update(user);
+            bootHandler.close(user);
         }
     }
 
@@ -128,15 +132,16 @@ public class ClientThread extends Thread {
         System.out.println("Handeling message for " + id + " with type: " + sm.getType().toString());
         switch (sm.getType()) {
             case REGISTER:
-                handleRegister();
+                registrationLoginHandler.register(sm, output);
                 break;
             case LOGIN:
-                handleLogin();
+                this.user = registrationLoginHandler.login(sm, output);
                 break;
             case BOOT:
-                handleBoot();
+                bootHandler.boot(user, output);
                 break;
             case ADD_CONTACT:
+                contactHandler.addContact(sm, user, output);
                 handleAddContact();
                 break;
             case REMOVE_CONTACT:
@@ -155,96 +160,9 @@ public class ClientThread extends Thread {
         }
     }
 
-    private void handleRegister() throws IOException {
-        //TODO Email activation shit
-        String ip = NetworkUtils.getExternalIp();
-        if (ip == null) {
-            output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
-            return;
-        }
-
-        RegisterData data = (RegisterData) sm.getData();
-        if (userDao.getUserByEmail(data.getEmail()) != null) {
-            output.writeObject(new ServerMessage(ServerMessageType.REGISTER_FAILED, "This email is already used."));
-            return;
-        }
-
-        User user = new User();
-        user.setEmail(data.getEmail());
-        user.setName(data.getName());
-        user.setPassword(data.getPassword());
-        user.setIp(ip);
-        user.setNickname(data.getName());
-        user.setSubNickname("");
-        user.setStatus(Status.OFFLINE);
-
-        userDao.create(user);
-
-        output.writeObject(new ServerMessage(ServerMessageType.REGISTER_SUCCESS, ""));
-    }
-
-    private void handleLogin() throws IOException {
-        LoginData data = (LoginData) sm.getData();
-        User user = userDao.getUserByEmail(data.getEmail());
-        if (user == null) {
-            output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "We could not find a user with this email."));
-            return;
-        }
-
-        if (!BCrypt.checkpw(data.getPassword(), user.getPassword())) {
-            output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "The password was not correct."));
-            return;
-        }
-
-        //update the status and ip
-        String ip = NetworkUtils.getExternalIp();
-        if (ip == null) {
-            output.writeObject(new ServerMessage(ServerMessageType.LOGIN_FAILED, "We could not fetch your ip.\nWe need this in order to let you chat with your friends."));
-            return;
-        }
-        user.setIp(ip);
-        user.setStatus(Status.ONLINE);
-        userDao.update(user);
-        this.user = user;
-
-        output.writeObject(new ServerMessage(ServerMessageType.LOGIN_SUCCESS, DataConverter.convertUser(user)));
-    }
-
-    private void handleBoot() throws IOException {
-        List<UserData> contacts = mapContactListToUserList(contactDao.getContacts(user)).stream()
-                .map(DataConverter::convertUser)
-                .collect(Collectors.toList());
-
-        output.writeObject(new ServerMessage(ServerMessageType.BOOT, contacts));
-    }
-
     private void handleAddContact() throws IOException {
-        AddContactData contactData = (AddContactData) sm.getData();
-        User userToAdd = userDao.getUserByEmail(contactData.getEmail());
-        if (userToAdd == null) {
-            output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_FAILED, "We could not find that user."));
-            return;
-        }
 
-        for (User u : mapContactListToUserList(contactDao.getContacts(user))) {
-            if (u.getId().intValue() == userToAdd.getId().intValue()) {
-                output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_FAILED, "You already added this user to your contacts."));
-                return;
-            }
-        }
-
-        Contact contact = new Contact();
-        contact.setOwner(this.user);
-        contact.setContact(userToAdd);
-
-        contactDao.create(contact);
-
-        output.writeObject(new ServerMessage(ServerMessageType.ADD_CONTACT_SUCCESS, null));
     }
 
-    private List<User> mapContactListToUserList(List<Contact> contacts) {
-        return contacts.stream()
-                .map(Contact::getContact)
-                .collect(Collectors.toList());
-    }
+
 }

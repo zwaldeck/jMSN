@@ -20,6 +20,10 @@ public class Contact implements Serializable {
     @JoinColumn(name = "contact_id")
     private User contact;
 
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     public User getOwner() {
         return owner;
     }
@@ -34,5 +38,13 @@ public class Contact implements Serializable {
 
     public void setContact(User contact) {
         this.contact = contact;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
     }
 }
