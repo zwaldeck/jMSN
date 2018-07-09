@@ -1,0 +1,26 @@
+.offline-border-imageview {
+    -fx-effect: dropshadow(three-pass-box, rgba(189, 189, 189, 0.8), 20, 0.8, 0, 0);
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+}
+
+.online-border-imageview {
+
+}
+
+.login-bg {
+    -fx-background-image: url("/img/login-bg.jpg");
+    -fx-background-repeat: stretch;
+}
+
+.rounded-imageview {
+    -fx-background-radius: 15;
+}
+
+.text-input, .text-input:focused {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+.add-contact-button {
+    -fx-background-image: url("/img/add-contact-btn.png");
+}
