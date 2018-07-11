@@ -20,7 +20,7 @@ public class ClientApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        NavigationUtils.openFxmlInSameScene(primaryStage, springContext, "/login.fxml", 520,520);
+        NavigationUtils.openLoginWindow(primaryStage, springContext);
     }
 
     @Override

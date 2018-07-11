@@ -4,10 +4,15 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 public abstract class GuiController {
 
-    private Stage stage;
+    @Autowired
+    protected ApplicationContext springContext;
+
+    protected Stage stage;
 
     public void displayErrorMessage(String error) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

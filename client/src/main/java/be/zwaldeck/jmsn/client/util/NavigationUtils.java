@@ -35,4 +35,12 @@ public class NavigationUtils {
         GuiController controller = loader.getController();
         controller.setStage(stage);
     }
+
+    public static void openLoginWindow(Stage stage, ApplicationContext springContext) throws IOException {
+        openFxmlInSameScene(stage, springContext, "/login.fxml", 520,520);
+    }
+
+    public static void openRegisterWindow(Stage stage, ApplicationContext springContext) throws IOException {
+        openFxmlInSameScene(stage, springContext, "/register.fxml", 300,400);
+    }
 }
