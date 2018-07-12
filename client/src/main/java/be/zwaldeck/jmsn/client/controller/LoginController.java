@@ -1,5 +1,6 @@
 package be.zwaldeck.jmsn.client.controller;
 
+import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.client.util.NavigationUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -30,9 +31,9 @@ public class LoginController extends GuiController {
     void onCreateAccount(ActionEvent event) {
         try {
             NavigationUtils.openRegisterWindow(stage, springContext);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            // TODO Handle exceptions
+            DialogUtils.exceptionDialog(e);
         }
     }
 
