@@ -41,6 +41,6 @@ public class NavigationUtils {
     }
 
     public static void openRegisterWindow(Stage stage, ApplicationContext springContext) throws IOException {
-        openFxmlInSameScene(stage, springContext, "/register.fxml", 300,400);
+        openFxmlInSameScene(stage, springContext, "/register.fxml", 300,500);
     }
 }
