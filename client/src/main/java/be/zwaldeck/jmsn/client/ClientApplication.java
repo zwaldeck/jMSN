@@ -15,11 +15,11 @@ public class ClientApplication extends Application {
 
     @Override
     public void init() throws Exception {
-        springContext = SpringApplication.run(ClientApplication.class, getParameters().getRaw().toArray(new String[0]));
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        springContext = SpringApplication.run(ClientApplication.class, getParameters().getRaw().toArray(new String[0]));
         NavigationUtils.openLoginWindow(primaryStage, springContext);
     }
 
