@@ -1,7 +1,7 @@
 package be.zwaldeck.jmsn.server.application;
 
-import be.zwaldeck.jmsn.common.message.ServerMessage;
-import be.zwaldeck.jmsn.server.application.handler.MessageHandler;
+import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
+import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,17 +13,17 @@ public class ClientThread extends Thread {
 
     private final Server server;
     private final Socket socket;
-    private final MessageHandler messageHandler;
+    private final RequestMessageDispatcher requestMessageDispatcher;
     private ObjectOutputStream output;
     private ObjectInputStream input;
 
     private String id;
     private boolean keepGoing = false;
 
-    public ClientThread(Server server, Socket socket, MessageHandler messageHandler) {
+    public ClientThread(Server server, Socket socket, RequestMessageDispatcher requestMessageDispatcher) {
         this.server = server;
         this.socket = socket;
-        this.messageHandler = messageHandler;
+        this.requestMessageDispatcher = requestMessageDispatcher;
     }
 
     public boolean init() {
@@ -46,17 +46,14 @@ public class ClientThread extends Thread {
     public void run() {
         keepGoing = true;
 
-        ServerMessage sm;
+        ServerRequestMessage sm;
         while (keepGoing) {
-            sm = null;
-            try {
-                sm = (ServerMessage) input.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            sm = receiveMessage();
 
-            if (sm != null && sm.getType() != ServerMessage.ServerMessageType.CLIENT_DISCONNECT) {
-                messageHandler.handleMessage(sm);
+            if (sm != null && sm.getType() != ServerRequestMessage.ServerRequestMessageType.CLIENT_DISCONNECT) {
+                requestMessageDispatcher
+                        .dispatch(sm)
+                        .ifPresent(this::sendMessage);
             } else {
                 keepGoing = false;
             }
@@ -90,5 +87,23 @@ public class ClientThread extends Thread {
 
     public String getClientId() {
         return id;
+    }
+
+    private ServerRequestMessage receiveMessage() {
+        try {
+            return (ServerRequestMessage) input.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void sendMessage(ServerResponseMessage message) {
+        try {
+            output.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

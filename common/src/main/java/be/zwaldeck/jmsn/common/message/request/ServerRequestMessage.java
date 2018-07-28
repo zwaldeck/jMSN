@@ -1,4 +1,4 @@
-package be.zwaldeck.jmsn.common.message;
+package be.zwaldeck.jmsn.common.message.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,24 +7,18 @@ import java.io.Serializable;
 
 @AllArgsConstructor
 @Getter
-public class ServerMessage implements Serializable {
+public class ServerRequestMessage implements Serializable {
 
-    private ServerMessageType type;
+    private static final long serialVersionUID = -1383956634827977551L;
+    private ServerRequestMessageType type;
     private Serializable data;
 
-
-    public enum ServerMessageType {
+    public enum ServerRequestMessageType {
         REGISTER,
-        REGISTER_FAILED,
-        REGISTER_SUCCESS,
         LOGIN,
-        LOGIN_FAILED,
-        LOGIN_SUCCESS,
         BOOT,
         UPDATE_CONTACT,
         ADD_CONTACT,
-        ADD_CONTACT_SUCCESS,
-        ADD_CONTACT_FAILED,
         REMOVE_CONTACT,
         UPDATE_NICKNAME,
         UPDATE_STATUS,

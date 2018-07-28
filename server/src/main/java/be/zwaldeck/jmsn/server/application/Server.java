@@ -1,7 +1,6 @@
 package be.zwaldeck.jmsn.server.application;
 
 import be.zwaldeck.jmsn.common.Constants;
-import be.zwaldeck.jmsn.server.application.handler.MessageHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +15,11 @@ public class Server {
     private boolean keepGoing;
     private ArrayList<ClientThread> clients = new ArrayList<>();
 
-    private final MessageHandler messageHandler;
+    private final RequestMessageDispatcher requestMessageDispatcher;
 
     @Autowired
-    public Server(MessageHandler messageHandler) {
-        this.messageHandler = messageHandler;
+    public Server(RequestMessageDispatcher requestMessageDispatcher) {
+        this.requestMessageDispatcher = requestMessageDispatcher;
     }
 
     public void start() {
@@ -69,7 +68,7 @@ public class Server {
     }
 
     private void createClient(Socket clientSocket) {
-        var client = new ClientThread(this, clientSocket, messageHandler);
+        var client = new ClientThread(this, clientSocket, requestMessageDispatcher);
 
         if (client.init()) {
             clients.add(client);
