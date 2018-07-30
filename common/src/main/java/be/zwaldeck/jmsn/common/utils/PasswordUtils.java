@@ -1,6 +1,6 @@
-package be.zwaldeck.jmsn.client.util;
+package be.zwaldeck.jmsn.common.utils;
 
-public class PasswordUtils {
+public final class PasswordUtils {
 
     public static int getPasswordStrength(String password) {
 

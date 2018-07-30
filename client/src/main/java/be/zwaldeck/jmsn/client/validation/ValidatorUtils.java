@@ -1,8 +1,7 @@
 package be.zwaldeck.jmsn.client.validation;
 
 
-import be.zwaldeck.jmsn.client.util.PasswordUtils;
-import javafx.scene.control.Control;
+import be.zwaldeck.jmsn.common.utils.PasswordUtils;
 import javafx.scene.control.TextInputControl;
 import org.controlsfx.validation.Severity;
 import org.controlsfx.validation.Validator;

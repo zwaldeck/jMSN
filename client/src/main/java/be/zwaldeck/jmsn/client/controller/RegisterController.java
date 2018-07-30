@@ -1,9 +1,13 @@
 package be.zwaldeck.jmsn.client.controller;
 
+import be.zwaldeck.jmsn.client.net.ServerConnection;
 import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.client.util.NavigationUtils;
 import be.zwaldeck.jmsn.client.validation.ValidationMessageMapper;
 import be.zwaldeck.jmsn.client.validation.ValidatorUtils;
+import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
+import be.zwaldeck.jmsn.common.message.request.data.RegisterData;
+import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -12,12 +16,16 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.decoration.StyleClassValidationDecoration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 @Controller
 public class RegisterController extends GuiController {
+
+    private final ServerConnection server;
 
     @FXML
     private Label emailErrorLbl;
@@ -45,6 +53,11 @@ public class RegisterController extends GuiController {
 
     private ValidationSupport validationSupport;
 
+    @Autowired
+    public RegisterController(ServerConnection server) {
+        this.server = server;
+    }
+
     @FXML
     public void initialize() {
         validationSupport = new ValidationSupport();
@@ -68,9 +81,18 @@ public class RegisterController extends GuiController {
     }
 
     @FXML
-    void onRegister(ActionEvent event) {
+    void onRegister(ActionEvent event) throws IOException {
         if (!validationSupport.isInvalid()) {
-            System.out.println("WE CAN REGISTER");
+            var data = new RegisterData(emailTxt.getText(), passwordTxt.getText());
+            server.sendMessage(new ServerRequestMessage(ServerRequestMessage.ServerRequestMessageType.REGISTER, data));
+            var response = server.waitForMessage();
+
+            if (response.getType() == ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS) {
+                NavigationUtils.openLoginWindow(stage, springContext);
+                DialogUtils.infoDialog("You are successfully registered", "Do not forget to check your email for instructions to activate your account.");
+            } else { // All checks are checked in the form, so we can just show something wrong
+                DialogUtils.errorDialog("There went something wrong. Please try again.");
+            }
         }
     }
 

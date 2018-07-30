@@ -2,6 +2,7 @@ package be.zwaldeck.jmsn.client.net;
 
 import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.common.Constants;
+import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class ServerConnection {
         }
     }
 
-    public void sendMessage(ServerResponseMessage sm) {
+    public void sendMessage(ServerRequestMessage sm) {
         try {
             output.writeObject(sm);
         } catch (IOException e) {

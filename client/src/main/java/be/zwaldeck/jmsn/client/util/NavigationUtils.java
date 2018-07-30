@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class NavigationUtils {
 
-    public static void openFxmlInSameScene(Stage stage, ApplicationContext springContext,
+    private static void openFxmlInSameScene(Stage stage, ApplicationContext springContext,
                                                     String fxmlFile, int width, int height) throws IOException {
         FXMLLoader loader = new FXMLLoader(NavigationUtils.class.getResource(fxmlFile));
         loader.setControllerFactory(springContext::getBean);
