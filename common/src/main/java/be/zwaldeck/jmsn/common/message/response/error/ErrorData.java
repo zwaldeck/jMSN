@@ -16,6 +16,7 @@ public class ErrorData implements Serializable {
     public enum ErrorType {
         INVALID_EMAIL,
         PASSWORD_NOT_STRONG_ENOUGH,
+        EMAIL_IN_USE,
 
         SOMETHING_WRONG
     }

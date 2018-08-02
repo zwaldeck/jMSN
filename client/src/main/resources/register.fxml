@@ -18,7 +18,7 @@
          <children>
             <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="150.0" styleClass="offline-border-imageview">
                <children>
-                  <ImageView fitHeight="150.0" fitWidth="150.0" pickOnBounds="true">
+                  <ImageView fx:id="avatarImgView" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true">
                      <image>
                         <Image url="@img/no-profile.png" />
                      </image>
@@ -65,7 +65,7 @@
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </HBox.margin>
                   </Button>
-                  <Button alignment="TOP_LEFT" mnemonicParsing="false" onAction="#onCancel" text="Cancel">
+                  <Button fx:id="cancelBtn" alignment="TOP_LEFT" mnemonicParsing="false" onAction="#onCancel" text="Cancel">
                      <HBox.margin>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </HBox.margin>

@@ -11,6 +11,9 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.EMAIL_IN_USE;
+import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.PASSWORD_NOT_STRONG_ENOUGH;
+
 @Component
 public class RegisterHandler {
 
@@ -23,7 +26,9 @@ public class RegisterHandler {
 
     public ServerResponseMessage registerUser(RegisterData data) {
 
-        if (!EmailValidator.getInstance().isValid(data.getEmail())) {
+        var email = data.getEmail().toLowerCase();
+
+        if (!EmailValidator.getInstance().isValid(email)) {
             return new ServerResponseMessage(
                     ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
                     new ErrorData(ErrorData.ErrorType.INVALID_EMAIL, "The email is invalid")
@@ -33,12 +38,19 @@ public class RegisterHandler {
         if (PasswordUtils.getPasswordStrength(data.getPassword()) < 75) {
             return new ServerResponseMessage(
                     ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
-                    new ErrorData(ErrorData.ErrorType.PASSWORD_NOT_STRONG_ENOUGH, "The password is not strong enough")
+                    new ErrorData(PASSWORD_NOT_STRONG_ENOUGH, "The password is not strong enough")
+            );
+        }
+
+        if (userService.getUserByEmail(email).isPresent()) {
+            return new ServerResponseMessage(
+                    ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
+                    new ErrorData(EMAIL_IN_USE, "This email is already used")
             );
         }
 
         var user = new User();
-        user.setEmail(data.getEmail());
+        user.setEmail(email);
         user.setPassword(data.getPassword());
         user.setNickname(data.getEmail().substring(0, data.getEmail().indexOf('@')));
         user.setIp("127.0.0.1");

@@ -7,13 +7,14 @@ import be.zwaldeck.jmsn.client.validation.ValidationMessageMapper;
 import be.zwaldeck.jmsn.client.validation.ValidatorUtils;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.request.data.RegisterData;
-import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
+import be.zwaldeck.jmsn.common.message.response.error.ErrorData;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.decoration.StyleClassValidationDecoration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.util.HashMap;
+
+import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS;
+import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.EMAIL_IN_USE;
 
 @Controller
 public class RegisterController extends GuiController {
@@ -51,6 +55,12 @@ public class RegisterController extends GuiController {
     @FXML
     private Button registerBtn;
 
+    @FXML
+    private Button cancelBtn;
+
+    @FXML
+    private ImageView avatarImgView;
+
     private ValidationSupport validationSupport;
 
     @Autowired
@@ -59,7 +69,7 @@ public class RegisterController extends GuiController {
     }
 
     @FXML
-    public void initialize() {
+    public void initialize() throws Exception {
         validationSupport = new ValidationSupport();
         validationSupport.setValidationDecorator(new StyleClassValidationDecoration());
         validationSupport.setErrorDecorationEnabled(true);
@@ -83,17 +93,25 @@ public class RegisterController extends GuiController {
     @FXML
     void onRegister(ActionEvent event) throws IOException {
         if (!validationSupport.isInvalid()) {
+            loading();
             var data = new RegisterData(emailTxt.getText(), passwordTxt.getText());
             server.sendMessage(new ServerRequestMessage(ServerRequestMessage.ServerRequestMessageType.REGISTER, data));
             var response = server.waitForMessage();
 
-            if (response.getType() == ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS) {
+            if (response.getType() == REGISTER_SUCCESS) {
                 NavigationUtils.openLoginWindow(stage, springContext);
                 DialogUtils.infoDialog("You are successfully registered", "Do not forget to check your email for instructions to activate your account.");
             } else { // All checks are checked in the form, so we can just show something wrong
-                DialogUtils.errorDialog("There went something wrong. Please try again.");
+                var errorData = (ErrorData) response.getData();
+                if(errorData.getErrorType() == EMAIL_IN_USE) {
+                    DialogUtils.errorDialog("This email is already used for another account. Please use a different email or login with this email.");
+                } else {
+                    DialogUtils.errorDialog("There went something wrong. Please try again.");
+                }
             }
+            doneLoading();
         }
+
     }
 
     @FXML
@@ -104,6 +122,16 @@ public class RegisterController extends GuiController {
             e.printStackTrace();
             DialogUtils.exceptionDialog(e);
         }
+    }
+
+    private void loading() {
+        registerBtn.setDisable(true);
+        cancelBtn.setDisable(true);
+    }
+
+    private void doneLoading() {
+        registerBtn.setDisable(false);
+        cancelBtn.setDisable(false);
     }
 
 }
