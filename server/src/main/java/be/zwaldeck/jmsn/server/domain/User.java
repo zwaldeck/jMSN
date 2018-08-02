@@ -16,7 +16,7 @@ public class User {
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     private String id;
 
-    @Column(name = "email", length = 500)
+    @Column(name = "email", length = 500, unique = true)
     private String email;
 
     @Column(name = "password", length = 500)
