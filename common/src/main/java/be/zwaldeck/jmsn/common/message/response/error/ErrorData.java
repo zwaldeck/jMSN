@@ -17,7 +17,8 @@ public class ErrorData implements Serializable {
         INVALID_EMAIL,
         PASSWORD_NOT_STRONG_ENOUGH,
         EMAIL_IN_USE,
-
+        USER_NOT_FOUND,
+        PASSWORD_NOT_MATCHING,
         SOMETHING_WRONG
     }
 }

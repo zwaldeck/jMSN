@@ -1,12 +1,15 @@
 package be.zwaldeck.jmsn.common.message.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
 @AllArgsConstructor
-@Getter
+@NoArgsConstructor
+@Data
 public class ServerResponseMessage implements Serializable {
 
     private static final long serialVersionUID = -6858949614827727453L;

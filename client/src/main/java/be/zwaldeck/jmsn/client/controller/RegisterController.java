@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static be.zwaldeck.jmsn.common.message.request.ServerRequestMessage.ServerRequestMessageType.REGISTER;
 import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS;
 import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.EMAIL_IN_USE;
 
@@ -78,8 +79,8 @@ public class RegisterController extends GuiController {
         validationSupport.setValidationDecorator(new StyleClassValidationDecoration());
         validationSupport.setErrorDecorationEnabled(true);
         validationSupport.registerValidator(emailTxt, ValidatorUtils.validateEmail(
-                translationService.getMessage("jmsn.register.validation.email.required"),
-                translationService.getMessage("jmsn.register.validation.email.invalid")
+                translationService.getMessage("jmsn.error.validation.email.required"),
+                translationService.getMessage("jmsn.error.validation.email.invalid")
         ));
         validationSupport.registerValidator(passwordTxt, ValidatorUtils.validatePassword(
                 translationService.getMessage("jmsn.register.validation.password.required"),
@@ -105,7 +106,7 @@ public class RegisterController extends GuiController {
         if (!validationSupport.isInvalid()) {
             loading();
             var data = new RegisterData(emailTxt.getText(), passwordTxt.getText());
-            server.sendMessage(new ServerRequestMessage(ServerRequestMessage.ServerRequestMessageType.REGISTER, data));
+            server.sendMessage(new ServerRequestMessage(REGISTER, data));
             var response = server.waitForMessage();
 
             if (response.getType() == REGISTER_SUCCESS) {
@@ -116,7 +117,7 @@ public class RegisterController extends GuiController {
                 if(errorData.getErrorType() == EMAIL_IN_USE) {
                     DialogUtils.errorDialog(translationService.getMessage("jmsn.register.error.email-in-use"));
                 } else {
-                    DialogUtils.errorDialog(translationService.getMessage("jmsn.something.wrong"));
+                    DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
                 }
             }
             doneLoading();
