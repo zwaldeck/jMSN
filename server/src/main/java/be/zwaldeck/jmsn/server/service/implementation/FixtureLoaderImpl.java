@@ -8,6 +8,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +22,8 @@ import java.util.Map;
 @Service
 @Profile({"fixtures"})
 public class FixtureLoaderImpl implements FixtureLoader {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final Map<String, String> rawDatabaseSettings;
     private final PasswordEncoder passwordEncoder;
@@ -35,12 +39,14 @@ public class FixtureLoaderImpl implements FixtureLoader {
 
     @Override
     public void loadFixtures() {
+        log.info("Loading the fixtures");
         resetSchema();
 
         loadUsers();
     }
 
     private void resetSchema() {
+        log.debug("Dropping and creating the schema");
         var metadataSources = new MetadataSources(
                 new StandardServiceRegistryBuilder().applySettings(rawDatabaseSettings).build()
         );
@@ -54,6 +60,8 @@ public class FixtureLoaderImpl implements FixtureLoader {
     }
 
     private void loadUsers() {
+        log.debug("Loading the users");
+
         var user = new User();
         user.setEmail("wout@feelio.be");
         user.setPassword(passwordEncoder.encode("testtest"));

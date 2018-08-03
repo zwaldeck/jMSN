@@ -5,11 +5,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
 
 public class NavigationUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(NavigationUtils.class);
 
     private static void openFxmlInSameScene(Stage stage, ApplicationContext springContext,
                                                     String fxmlFile, int width, int height) throws IOException {
@@ -37,10 +41,12 @@ public class NavigationUtils {
     }
 
     public static void openLoginWindow(Stage stage, ApplicationContext springContext) throws IOException {
+        log.debug("Opening login window");
         openFxmlInSameScene(stage, springContext, "/login.fxml", 520,520);
     }
 
     public static void openRegisterWindow(Stage stage, ApplicationContext springContext) throws IOException {
+        log.debug("Opening register window");
         openFxmlInSameScene(stage, springContext, "/register.fxml", 300,500);
     }
 }

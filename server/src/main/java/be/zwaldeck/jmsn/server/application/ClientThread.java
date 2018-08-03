@@ -3,6 +3,7 @@ package be.zwaldeck.jmsn.server.application;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -93,7 +94,9 @@ public class ClientThread extends Thread {
         try {
             return (ServerRequestMessage) input.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            if (!(e instanceof EOFException)) {
+                e.printStackTrace();
+            }
         }
 
         return null;

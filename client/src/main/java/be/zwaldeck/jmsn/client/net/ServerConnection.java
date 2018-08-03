@@ -4,6 +4,8 @@ import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.common.Constants;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -14,6 +16,8 @@ import java.net.Socket;
 
 @Service
 public class ServerConnection {
+
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     private ObjectInputStream input;
     private ObjectOutputStream output;
@@ -30,9 +34,12 @@ public class ServerConnection {
             DialogUtils.errorDialog("We could not make connection with the server.");
             System.exit(1);
         }
+
+        log.info("Connected to central server");
     }
 
     public void sendMessage(ServerRequestMessage sm) {
+        log.debug("Sending request to the server with type: " + sm.getType());
         try {
             output.writeObject(sm);
         } catch (IOException e) {
@@ -42,7 +49,9 @@ public class ServerConnection {
 
     public ServerResponseMessage waitForMessage() {
         try {
-            return (ServerResponseMessage) input.readObject();
+            var sm = (ServerResponseMessage) input.readObject();
+            log.debug("Received response from server with type: " + sm.getType());
+            return sm;
         } catch (IOException e) {
             DialogUtils.errorDialog("There went something wrong. Please try again.");
         } catch (ClassNotFoundException ignored) {

@@ -1,6 +1,8 @@
 package be.zwaldeck.jmsn.server.application;
 
 import be.zwaldeck.jmsn.common.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,8 @@ import java.util.ArrayList;
 
 @Component
 public class Server {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private boolean keepGoing;
     private ArrayList<ClientThread> clients = new ArrayList<>();
@@ -27,7 +31,7 @@ public class Server {
         try {
             ServerSocket serverSocket = new ServerSocket(Constants.SERVER_PORT);
             while (keepGoing) {
-                System.out.println("Server is waiting for clients on port " + Constants.SERVER_PORT);
+                log.info("Server is waiting for clients on port " + Constants.SERVER_PORT);
 
                 Socket socket = serverSocket.accept();
                 if (!keepGoing) {
@@ -42,6 +46,8 @@ public class Server {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        log.info("Server is closed");
     }
 
     public void stop() {
@@ -60,10 +66,11 @@ public class Server {
     }
 
     public void displayInfo(String msg) {
-        System.out.println(msg);
+        log.info(msg);
     }
 
     public synchronized void remove(String id) {
+        log.debug("Removing client with id: " + id);
         clients.removeIf(client -> client.getClientId().equalsIgnoreCase(id));
     }
 

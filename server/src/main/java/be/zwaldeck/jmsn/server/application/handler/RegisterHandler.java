@@ -8,6 +8,8 @@ import be.zwaldeck.jmsn.common.utils.PasswordUtils;
 import be.zwaldeck.jmsn.server.domain.User;
 import be.zwaldeck.jmsn.server.service.UserService;
 import org.apache.commons.validator.routines.EmailValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType
 
 @Component
 public class RegisterHandler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final UserService userService;
 
@@ -26,9 +30,11 @@ public class RegisterHandler {
 
     public ServerResponseMessage registerUser(RegisterData data) {
 
+        log.debug("Validating register data");
         var email = data.getEmail().toLowerCase();
 
         if (!EmailValidator.getInstance().isValid(email)) {
+            log.debug("Sending REGISTER_FAILED with INVALID_EMAIL");
             return new ServerResponseMessage(
                     ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
                     new ErrorData(ErrorData.ErrorType.INVALID_EMAIL, "The email is invalid")
@@ -36,6 +42,7 @@ public class RegisterHandler {
         }
 
         if (PasswordUtils.getPasswordStrength(data.getPassword()) < 75) {
+            log.debug("Sending REGISTER_FAILED with PASSWORD_NOT_STRONG_ENOUGH");
             return new ServerResponseMessage(
                     ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
                     new ErrorData(PASSWORD_NOT_STRONG_ENOUGH, "The password is not strong enough")
@@ -43,6 +50,7 @@ public class RegisterHandler {
         }
 
         if (userService.getUserByEmail(email).isPresent()) {
+            log.debug("Sending REGISTER_FAILED with EMAIL_IN_USE");
             return new ServerResponseMessage(
                     ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED,
                     new ErrorData(EMAIL_IN_USE, "This email is already used")
@@ -58,6 +66,8 @@ public class RegisterHandler {
         user.setSubNickname("");
 
         userService.createUser(user);
+
+        log.debug("User with id '" + user.getId() + "' created. Sending REGISTER_SUCCESS");
 
         return new ServerResponseMessage(ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS);
     }
