@@ -6,6 +6,9 @@ import javafx.stage.Stage;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.MessageSource;
+
+import java.util.Locale;
 
 @SpringBootApplication
 public class ClientApplication extends Application {

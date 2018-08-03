@@ -1,6 +1,7 @@
 package be.zwaldeck.jmsn.client.controller;
 
 import be.zwaldeck.jmsn.client.net.ServerConnection;
+import be.zwaldeck.jmsn.client.service.TranslationService;
 import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.client.util.NavigationUtils;
 import be.zwaldeck.jmsn.client.validation.ValidationMessageMapper;
@@ -30,6 +31,7 @@ import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType
 public class RegisterController extends GuiController {
 
     private final ServerConnection server;
+    private final TranslationService translationService;
 
     @FXML
     private Label emailErrorLbl;
@@ -64,18 +66,26 @@ public class RegisterController extends GuiController {
     private ValidationSupport validationSupport;
 
     @Autowired
-    public RegisterController(ServerConnection server) {
+    public RegisterController(ServerConnection server, TranslationService translationService) {
         this.server = server;
+        this.translationService = translationService;
     }
 
     @FXML
+    @SuppressWarnings("unchecked")
     public void initialize() throws Exception {
         validationSupport = new ValidationSupport();
         validationSupport.setValidationDecorator(new StyleClassValidationDecoration());
         validationSupport.setErrorDecorationEnabled(true);
-        validationSupport.registerValidator(emailTxt, ValidatorUtils.validateEmail("Please fill in your email.", "This email is invalid"));
-        validationSupport.registerValidator(passwordTxt, ValidatorUtils.validatePassword("Please fill in your password", "This password is not strong enough. Use uppercase, lowercase, number and special characters"));
-        validationSupport.registerValidator(repeatPasswordTxt, ValidatorUtils.validateControlsValueAreEqual(passwordTxt, "The passwords do not match"));
+        validationSupport.registerValidator(emailTxt, ValidatorUtils.validateEmail(
+                translationService.getMessage("jmsn.register.validation.email.required"),
+                translationService.getMessage("jmsn.register.validation.email.invalid")
+        ));
+        validationSupport.registerValidator(passwordTxt, ValidatorUtils.validatePassword(
+                translationService.getMessage("jmsn.register.validation.password.required"),
+                translationService.getMessage("jmsn.register.validation.password.not-strong-enough"))
+        );
+        validationSupport.registerValidator(repeatPasswordTxt, ValidatorUtils.validateControlsValueAreEqual(passwordTxt, translationService.getMessage("jmsn.register.validation.password.repeat")));
 
         var validationLabelsMap = new HashMap<String, Label>();
         validationLabelsMap.put(emailTxt.getId(), emailErrorLbl);
@@ -100,13 +110,13 @@ public class RegisterController extends GuiController {
 
             if (response.getType() == REGISTER_SUCCESS) {
                 NavigationUtils.openLoginWindow(stage, springContext);
-                DialogUtils.infoDialog("You are successfully registered", "Do not forget to check your email for instructions to activate your account.");
+                DialogUtils.infoDialog(translationService.getMessage("jmsn.register.success.header"), translationService.getMessage("jmsn.register.success.text"));
             } else { // All checks are checked in the form, so we can just show something wrong
                 var errorData = (ErrorData) response.getData();
                 if(errorData.getErrorType() == EMAIL_IN_USE) {
-                    DialogUtils.errorDialog("This email is already used for another account. Please use a different email or login with this email.");
+                    DialogUtils.errorDialog(translationService.getMessage("jmsn.register.error.email-in-use"));
                 } else {
-                    DialogUtils.errorDialog("There went something wrong. Please try again.");
+                    DialogUtils.errorDialog(translationService.getMessage("jmsn.something.wrong"));
                 }
             }
             doneLoading();
