@@ -64,7 +64,7 @@ public class FixtureLoaderImpl implements FixtureLoader {
 
         var user = new User();
         user.setEmail("wout@feelio.be");
-        user.setPassword(passwordEncoder.encode("testtest"));
+        user.setPassword("testtest");
         user.setIp("127.0.0.1");
         user.setNickname("wout");
         user.setStatus(Status.OFFLINE);

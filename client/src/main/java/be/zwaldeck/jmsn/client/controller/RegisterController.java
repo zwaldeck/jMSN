@@ -4,11 +4,15 @@ import be.zwaldeck.jmsn.client.net.ServerConnection;
 import be.zwaldeck.jmsn.client.service.TranslationService;
 import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.client.util.NavigationUtils;
+import be.zwaldeck.jmsn.client.util.Tasks;
 import be.zwaldeck.jmsn.client.validation.ValidationMessageMapper;
 import be.zwaldeck.jmsn.client.validation.ValidatorUtils;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.request.data.RegisterData;
+import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 import be.zwaldeck.jmsn.common.message.response.error.ErrorData;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -99,30 +103,21 @@ public class RegisterController extends GuiController {
             validationMapper.apply(newValue);
             registerBtn.setDisable(validationSupport.isInvalid());
         });
+
+        server.getServerMessageReceiverThread().setCallbacks(this::handleServerMessage, this::handleError);
     }
 
     @FXML
-    void onRegister(ActionEvent event) throws IOException {
+    void onRegister(ActionEvent ae) {
         if (!validationSupport.isInvalid()) {
             loading();
             var data = new RegisterData(emailTxt.getText(), passwordTxt.getText());
-            server.sendMessage(new ServerRequestMessage(REGISTER, data));
-            var response = server.waitForMessage();
-
-            if (response.getType() == REGISTER_SUCCESS) {
-                NavigationUtils.openLoginWindow(stage, springContext);
-                DialogUtils.infoDialog(translationService.getMessage("jmsn.register.success.header"), translationService.getMessage("jmsn.register.success.text"));
-            } else { // All checks are checked in the form, so we can just show something wrong
-                var errorData = (ErrorData) response.getData();
-                if(errorData.getErrorType() == EMAIL_IN_USE) {
-                    DialogUtils.errorDialog(translationService.getMessage("jmsn.register.error.email-in-use"));
-                } else {
-                    DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
-                }
-            }
-            doneLoading();
+            Task<Void> sendMessageTask = Tasks.sendMessageToServer(server, new ServerRequestMessage(REGISTER, data));
+            sendMessageTask.setOnFailed(event -> {
+                DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
+            });
+            Tasks.start(sendMessageTask);
         }
-
     }
 
     @FXML
@@ -143,6 +138,26 @@ public class RegisterController extends GuiController {
     private void doneLoading() {
         registerBtn.setDisable(false);
         cancelBtn.setDisable(false);
+    }
+
+    private void handleServerMessage(ServerResponseMessage msg) {
+        Platform.runLater(() -> {
+            try {
+                if (msg.getType() == REGISTER_SUCCESS) {
+                    NavigationUtils.openLoginWindow(stage, springContext);
+                    DialogUtils.infoDialog(translationService.getMessage("jmsn.register.success.header"), translationService.getMessage("jmsn.register.success.text"));
+                } else { // All checks are checked in the form, so we can just show something wrong
+                    var errorData = (ErrorData) msg.getData();
+                    if (errorData.getErrorType() == EMAIL_IN_USE) {
+                        DialogUtils.errorDialog(translationService.getMessage("jmsn.register.error.email-in-use"));
+                    } else {
+                        DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
+                    }
+                }
+            } catch (IOException ex) {
+                handleError(ex);
+            }
+        });
     }
 
 }

@@ -15,13 +15,14 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 @Service
-public class ServerConnection {
+public class ServerConnection extends Thread {
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
     private ObjectInputStream input;
     private ObjectOutputStream output;
     private Socket socket;
+    private ServerMessageReceiverThread smrt;
 
     @PostConstruct
     public void init() {
@@ -29,6 +30,8 @@ public class ServerConnection {
             socket = new Socket(Constants.SERVER_IP, Constants.SERVER_PORT);
             input = new ObjectInputStream(socket.getInputStream());
             output = new ObjectOutputStream(socket.getOutputStream());
+            smrt = new ServerMessageReceiverThread(input);
+            smrt.start();
         } catch (IOException e) {
             e.printStackTrace();
             DialogUtils.errorDialog("We could not make connection with the server.");
@@ -47,30 +50,20 @@ public class ServerConnection {
         }
     }
 
-    public ServerResponseMessage waitForMessage() {
-        try {
-            var sm = (ServerResponseMessage) input.readObject();
-            log.debug("Received response from server with type: " + sm.getType());
-            return sm;
-        } catch (IOException e) {
-            DialogUtils.errorDialog("There went something wrong. Please try again.");
-        } catch (ClassNotFoundException ignored) {
-        }
-
-        return null;
-    }
-
     public void disconnect() {
         try {
             input.close();
             output.close();
             socket.close();
-
         } catch (Exception e) {
         } finally {
             input = null;
             output = null;
             socket = null;
         }
+    }
+
+    public ServerMessageReceiverThread getServerMessageReceiverThread() {
+        return this.smrt;
     }
 }

@@ -19,10 +19,10 @@ public class User {
     @Column(name = "email", length = 500, unique = true)
     private String email;
 
-    @Column(name = "password", length = 500)
+    @Column(name = "password")
     private String password;
 
-    @Column(name = "nickname", length = 500)
+    @Column(name = "nickname")
     private String nickname;
 
     @Column(name = "ip", length = 45)

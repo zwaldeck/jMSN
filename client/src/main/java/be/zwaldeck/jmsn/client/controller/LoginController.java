@@ -6,12 +6,15 @@ import be.zwaldeck.jmsn.client.net.service.IpFinderService;
 import be.zwaldeck.jmsn.client.service.TranslationService;
 import be.zwaldeck.jmsn.client.util.DialogUtils;
 import be.zwaldeck.jmsn.client.util.NavigationUtils;
+import be.zwaldeck.jmsn.client.util.Tasks;
 import be.zwaldeck.jmsn.client.validation.ValidationMessageMapper;
 import be.zwaldeck.jmsn.client.validation.ValidatorUtils;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.request.data.LoginData;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 import be.zwaldeck.jmsn.common.message.response.error.ErrorData;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -81,7 +84,7 @@ public class LoginController extends GuiController {
             signInBtn.setDisable(validationSupport.isInvalid());
         });
 
-
+        server.getServerMessageReceiverThread().setCallbacks(this::handleServerMessage, this::handleError);
     }
 
     @FXML
@@ -95,39 +98,46 @@ public class LoginController extends GuiController {
     }
 
     @FXML
-    void onSignIn(ActionEvent event) {
+    void onSignIn(ActionEvent e) {
         if (!validationSupport.isInvalid()) {
             try {
                 var data = new LoginData(emailTxt.getText().toLowerCase().trim(),
                         passwordTxt.getText(), ipFinderService.findPublicIP());
 
-                server.sendMessage(new ServerRequestMessage(LOGIN, data));
-                var response = server.waitForMessage();
+                Task<Void> sendMessageTask = Tasks.sendMessageToServer(server, new ServerRequestMessage(LOGIN, data));
+                sendMessageTask.setOnFailed(event -> {
+                    DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
+                });
+                Tasks.start(sendMessageTask);
 
-                if (response.getType() == LOGIN_SUCCESS) {
-                    System.out.println("OPEN UP THE REAL APP");
-                } else {
-                    var errorData = (ErrorData) response.getData();
-                    String message;
-                    switch (errorData.getErrorType()) {
-                        case USER_NOT_FOUND:
-                            message = translationService.getMessage("jmsn.login.error.user-not-found");
-                            break;
-                        case PASSWORD_NOT_MATCHING:
-                            message = translationService.getMessage("jmsn.login.error.password-not-matching");
-                            break;
-                        default:
-                            message = translationService.getMessage("jmsn.error.something.wrong");
-                            break;
-                    }
+            } catch (IPResolverException ex) {
+                ex.printStackTrace();
 
-                    DialogUtils.errorDialog(message);
-                }
-
-            } catch (IPResolverException e) {
-                e.printStackTrace();
-                DialogUtils.exceptionDialog(e);
             }
         }
+    }
+
+    private void handleServerMessage(ServerResponseMessage msg) {
+        Platform.runLater(() -> {
+            if (msg.getType() == LOGIN_SUCCESS) {
+                System.out.println("OPEN UP THE REAL APP");
+            } else {
+                var errorData = (ErrorData) msg.getData();
+                String message;
+                switch (errorData.getErrorType()) {
+                    case USER_NOT_FOUND:
+                        message = translationService.getMessage("jmsn.login.error.user-not-found");
+                        break;
+                    case PASSWORD_NOT_MATCHING:
+                        message = translationService.getMessage("jmsn.login.error.password-not-matching");
+                        break;
+                    default:
+                        message = translationService.getMessage("jmsn.error.something.wrong");
+                        break;
+                }
+
+                DialogUtils.errorDialog(message);
+            }
+        });
     }
 }
