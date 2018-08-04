@@ -28,6 +28,7 @@ public class ClientApplication extends Application {
     @Override
     public void stop() throws Exception {
         springContext.close();
+        System.exit(0);
     }
 
     public static void main(String[] args) {
