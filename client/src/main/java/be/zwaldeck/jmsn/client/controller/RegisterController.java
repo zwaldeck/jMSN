@@ -19,6 +19,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.decoration.StyleClassValidationDecoration;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import static be.zwaldeck.jmsn.common.message.request.ServerRequestMessage.ServerRequestMessageType.REGISTER;
+import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.REGISTER_FAILED;
 import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.REGISTER_SUCCESS;
 import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.EMAIL_IN_USE;
 
@@ -69,6 +71,8 @@ public class RegisterController extends GuiController {
     private ImageView avatarImgView;
 
     private ValidationSupport validationSupport;
+    private Image loadingImg;
+    private Image defaultAvatarImg;
 
     @Autowired
     public RegisterController(ServerConnection server, TranslationService translationService) {
@@ -105,6 +109,9 @@ public class RegisterController extends GuiController {
         });
 
         server.getServerMessageReceiverThread().setCallbacks(this::handleServerMessage, this::handleError);
+
+        loadingImg = new Image(this.getClass().getResourceAsStream("/img/loading.gif"));
+        defaultAvatarImg = new Image(this.getClass().getResourceAsStream("/img/no-profile.png"));
     }
 
     @FXML
@@ -131,13 +138,13 @@ public class RegisterController extends GuiController {
     }
 
     private void loading() {
+        avatarImgView.setImage(loadingImg);
         registerBtn.setDisable(true);
-        cancelBtn.setDisable(true);
     }
 
     private void doneLoading() {
+        avatarImgView.setImage(defaultAvatarImg);
         registerBtn.setDisable(false);
-        cancelBtn.setDisable(false);
     }
 
     private void handleServerMessage(ServerResponseMessage msg) {
@@ -146,13 +153,15 @@ public class RegisterController extends GuiController {
                 if (msg.getType() == REGISTER_SUCCESS) {
                     NavigationUtils.openLoginWindow(stage, springContext);
                     DialogUtils.infoDialog(translationService.getMessage("jmsn.register.success.header"), translationService.getMessage("jmsn.register.success.text"));
-                } else { // All checks are checked in the form, so we can just show something wrong
+                    doneLoading();
+                } else if (msg.getType() == REGISTER_FAILED){ // All checks are checked in the form, so we can just show something wrong
                     var errorData = (ErrorData) msg.getData();
                     if (errorData.getErrorType() == EMAIL_IN_USE) {
                         DialogUtils.errorDialog(translationService.getMessage("jmsn.register.error.email-in-use"));
                     } else {
                         DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
                     }
+                    doneLoading();
                 }
             } catch (IOException ex) {
                 handleError(ex);

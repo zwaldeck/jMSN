@@ -1,6 +1,7 @@
 package be.zwaldeck.jmsn.client.util;
 
 import be.zwaldeck.jmsn.client.net.ServerConnection;
+import be.zwaldeck.jmsn.client.net.service.IpFinderService;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import javafx.concurrent.Task;
 
@@ -12,6 +13,15 @@ public final class Tasks {
             protected Void call() throws Exception {
                 connection.sendMessage(srm);
                 return null;
+            }
+        };
+    }
+
+    public static Task<String> findPublicIp(IpFinderService ipFinderService) {
+        return new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                return ipFinderService.findPublicIP();
             }
         };
     }

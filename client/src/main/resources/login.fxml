@@ -58,7 +58,7 @@
                         <Insets left="10.0" top="10.0" />
                      </GridPane.margin>
                      <children>
-                        <ImageView fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" styleClass="rounded-imageview">
+                        <ImageView fx:id="avatarIv" fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" styleClass="rounded-imageview">
                            <image>
                               <Image url="@img/no-profile.png" />
                            </image>

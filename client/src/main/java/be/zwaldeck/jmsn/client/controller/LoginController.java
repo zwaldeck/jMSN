@@ -1,7 +1,6 @@
 package be.zwaldeck.jmsn.client.controller;
 
 import be.zwaldeck.jmsn.client.net.ServerConnection;
-import be.zwaldeck.jmsn.client.net.exception.IPResolverException;
 import be.zwaldeck.jmsn.client.net.service.IpFinderService;
 import be.zwaldeck.jmsn.client.service.TranslationService;
 import be.zwaldeck.jmsn.client.util.DialogUtils;
@@ -18,18 +17,18 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.decoration.StyleClassValidationDecoration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import static be.zwaldeck.jmsn.common.message.request.ServerRequestMessage.ServerRequestMessageType.LOGIN;
+import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.LOGIN_FAILED;
 import static be.zwaldeck.jmsn.common.message.response.ServerResponseMessage.ServerResponseMessageType.LOGIN_SUCCESS;
-import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.PASSWORD_NOT_MATCHING;
-import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType.USER_NOT_FOUND;
 
 @Controller
 public class LoginController extends GuiController {
@@ -52,7 +51,13 @@ public class LoginController extends GuiController {
 
     @FXML
     private Button signInBtn;
+
+    @FXML
+    private ImageView avatarIv;
+
     private ValidationSupport validationSupport;
+    private Image loadingImg;
+    private Image defaultAvatarImg;
 
     @Autowired
     public LoginController(ServerConnection server, TranslationService translationService,
@@ -85,6 +90,9 @@ public class LoginController extends GuiController {
         });
 
         server.getServerMessageReceiverThread().setCallbacks(this::handleServerMessage, this::handleError);
+
+        loadingImg = new Image(this.getClass().getResourceAsStream("/img/loading.gif"));
+        defaultAvatarImg = new Image(this.getClass().getResourceAsStream("/img/no-profile.png"));
     }
 
     @FXML
@@ -100,20 +108,19 @@ public class LoginController extends GuiController {
     @FXML
     void onSignIn(ActionEvent e) {
         if (!validationSupport.isInvalid()) {
-            try {
+            loading();
+
+            Task<String> publicIpFinderTask = Tasks.findPublicIp(ipFinderService);
+            publicIpFinderTask.setOnFailed(event -> DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong")));
+            publicIpFinderTask.setOnSucceeded(result -> {
                 var data = new LoginData(emailTxt.getText().toLowerCase().trim(),
-                        passwordTxt.getText(), ipFinderService.findPublicIP());
+                        passwordTxt.getText(), publicIpFinderTask.getValue());
 
                 Task<Void> sendMessageTask = Tasks.sendMessageToServer(server, new ServerRequestMessage(LOGIN, data));
-                sendMessageTask.setOnFailed(event -> {
-                    DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong"));
-                });
+                sendMessageTask.setOnFailed(event1 -> DialogUtils.errorDialog(translationService.getMessage("jmsn.error.something.wrong")));
                 Tasks.start(sendMessageTask);
-
-            } catch (IPResolverException ex) {
-                ex.printStackTrace();
-
-            }
+            });
+            Tasks.start(publicIpFinderTask);
         }
     }
 
@@ -121,7 +128,8 @@ public class LoginController extends GuiController {
         Platform.runLater(() -> {
             if (msg.getType() == LOGIN_SUCCESS) {
                 System.out.println("OPEN UP THE REAL APP");
-            } else {
+                doneLoading();
+            } else if (msg.getType() == LOGIN_FAILED) {
                 var errorData = (ErrorData) msg.getData();
                 String message;
                 switch (errorData.getErrorType()) {
@@ -136,8 +144,19 @@ public class LoginController extends GuiController {
                         break;
                 }
 
+                doneLoading();
                 DialogUtils.errorDialog(message);
             }
         });
+    }
+
+    private void loading() {
+        avatarIv.setImage(loadingImg);
+        signInBtn.setDisable(true);
+    }
+
+    private void doneLoading() {
+        avatarIv.setImage(defaultAvatarImg);
+        signInBtn.setDisable(false);
     }
 }

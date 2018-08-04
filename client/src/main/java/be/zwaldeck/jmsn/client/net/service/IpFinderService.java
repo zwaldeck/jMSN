@@ -25,7 +25,7 @@ public class IpFinderService {
         for (var resolver : publicResolvers) {
             var result = resolver.loadIP();
             if (result.isPresent()) {
-                return result.get();
+                return result.get().trim();
             }
         }
 
