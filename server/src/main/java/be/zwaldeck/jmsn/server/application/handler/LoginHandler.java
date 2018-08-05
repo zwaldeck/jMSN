@@ -4,6 +4,8 @@ import be.zwaldeck.jmsn.common.message.request.data.LoginData;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
 import be.zwaldeck.jmsn.common.message.response.data.BootData;
 import be.zwaldeck.jmsn.common.message.response.error.ErrorData;
+import be.zwaldeck.jmsn.server.converter.UserDataConverter;
+import be.zwaldeck.jmsn.server.service.ContactService;
 import be.zwaldeck.jmsn.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,11 +20,16 @@ import static be.zwaldeck.jmsn.common.message.response.error.ErrorData.ErrorType
 public class LoginHandler {
 
     private final UserService userService;
+    private final ContactService contactService;
+    private final UserDataConverter userConverter;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public LoginHandler(UserService userService, PasswordEncoder passwordEncoder) {
+    public LoginHandler(UserService userService, ContactService contactService, UserDataConverter userConverter,
+                        PasswordEncoder passwordEncoder) {
         this.userService = userService;
+        this.contactService = contactService;
+        this.userConverter = userConverter;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -38,10 +45,10 @@ public class LoginHandler {
 
             user.setIp(data.getIp());
             user = userService.updateUser(user);
+            var contacts = contactService.getContactsForOwner(user);
 
-
-            // TODO create contact list
             var bootData = new BootData();
+            bootData.setContactList(userConverter.convertUserList(contacts));
 
             response.setType(LOGIN_SUCCESS);
             response.setData(bootData);
