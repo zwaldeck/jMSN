@@ -22,7 +22,7 @@ public class NavigationUtils {
         Parent root = loader.load();
 
         // We use -1 to trigger a bit further a repaint
-        Scene scene = new Scene(root, width - 1, height - 1);
+        Scene scene = new Scene(root, width - 10, height - 10);
         stage.setScene(scene);
         stage.setTitle("jMSN Messenger");
         stage.show();
@@ -48,5 +48,10 @@ public class NavigationUtils {
     public static void openRegisterWindow(Stage stage, ApplicationContext springContext) throws IOException {
         log.debug("Opening register window");
         openFxmlInSameScene(stage, springContext, "/register.fxml", 300,500);
+    }
+
+    public static void openMainWindow(Stage stage, ApplicationContext springContext) throws IOException {
+        log.debug("Opening main window");
+        openFxmlInSameScene(stage, springContext, "/main.fxml", 600, 800);
     }
 }

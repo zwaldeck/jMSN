@@ -1,5 +1,6 @@
 package be.zwaldeck.jmsn.client.controller;
 
+import be.zwaldeck.jmsn.client.data.ApplicationData;
 import be.zwaldeck.jmsn.client.net.ServerConnection;
 import be.zwaldeck.jmsn.client.net.service.IpFinderService;
 import be.zwaldeck.jmsn.client.service.TranslationService;
@@ -11,6 +12,7 @@ import be.zwaldeck.jmsn.client.validation.ValidatorUtils;
 import be.zwaldeck.jmsn.common.message.request.ServerRequestMessage;
 import be.zwaldeck.jmsn.common.message.request.data.LoginData;
 import be.zwaldeck.jmsn.common.message.response.ServerResponseMessage;
+import be.zwaldeck.jmsn.common.message.response.data.BootData;
 import be.zwaldeck.jmsn.common.message.response.error.ErrorData;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -24,6 +26,7 @@ import org.controlsfx.validation.decoration.StyleClassValidationDecoration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import static be.zwaldeck.jmsn.common.message.request.ServerRequestMessage.ServerRequestMessageType.LOGIN;
@@ -126,27 +129,35 @@ public class LoginController extends GuiController {
 
     private void handleServerMessage(ServerResponseMessage msg) {
         Platform.runLater(() -> {
-            if (msg.getType() == LOGIN_SUCCESS) {
-                System.out.println("OPEN UP THE REAL APP");
-                doneLoading();
-            } else if (msg.getType() == LOGIN_FAILED) {
-                var errorData = (ErrorData) msg.getData();
-                String message;
-                switch (errorData.getErrorType()) {
-                    case USER_NOT_FOUND:
-                        message = translationService.getMessage("jmsn.login.error.user-not-found");
-                        break;
-                    case PASSWORD_NOT_MATCHING:
-                        message = translationService.getMessage("jmsn.login.error.password-not-matching");
-                        break;
-                    default:
-                        message = translationService.getMessage("jmsn.error.something.wrong");
-                        break;
-                }
+            try {
+                if (msg.getType() == LOGIN_SUCCESS) {
+                    ApplicationData.getInstance().setContacts(((BootData) msg.getData()).getContactList());
+                    NavigationUtils.openMainWindow(stage, springContext);
+                    doneLoading();
+                } else if (msg.getType() == LOGIN_FAILED) {
+                    var errorData = (ErrorData) msg.getData();
+                    String message;
+                    switch (errorData.getErrorType()) {
+                        case USER_NOT_FOUND:
+                            message = translationService.getMessage("jmsn.login.error.user-not-found");
+                            break;
+                        case PASSWORD_NOT_MATCHING:
+                            message = translationService.getMessage("jmsn.login.error.password-not-matching");
+                            break;
+                        default:
+                            message = translationService.getMessage("jmsn.error.something.wrong");
+                            break;
+                    }
 
-                doneLoading();
-                DialogUtils.errorDialog(message);
+                    doneLoading();
+                    DialogUtils.errorDialog(message);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                DialogUtils.exceptionDialog(ex);
+                System.exit(-1);
             }
+
         });
     }
 
