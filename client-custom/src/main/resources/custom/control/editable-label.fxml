@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<fx:root maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="400.0" type="StackPane" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label fx:id="label" text="Label" StackPane.alignment="CENTER_LEFT">
+         <font>
+            <Font size="17.0" />
+         </font>
+         <StackPane.margin>
+            <Insets left="10.0" />
+         </StackPane.margin></Label>
+      <TextField fx:id="textField" visible="false" />
+   </children>
+</fx:root>
