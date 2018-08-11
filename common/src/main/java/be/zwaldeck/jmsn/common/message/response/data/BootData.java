@@ -10,5 +10,6 @@ public class BootData implements Serializable {
 
     private static final long serialVersionUID = -5976471788306821280L;
 
-    List<UserData> contactList;
+    private List<UserData> contactList;
+    private UserData user;
 }

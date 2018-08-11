@@ -49,6 +49,7 @@ public class LoginHandler {
 
             var bootData = new BootData();
             bootData.setContactList(userConverter.convertUserList(contacts));
+            bootData.setUser(userConverter.convertUser(user));
 
             response.setType(LOGIN_SUCCESS);
             response.setData(bootData);
