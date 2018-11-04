@@ -4,10 +4,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class EditableLabel extends StackPane {
 
@@ -17,7 +20,9 @@ public class EditableLabel extends StackPane {
     @FXML
     private TextField textField;
 
-    private Callback<String, Void> updateCallback;
+    private Consumer<String> updateCallback;
+
+    private String oldValue;
 
     public EditableLabel() {
         loadFXML();
@@ -25,8 +30,36 @@ public class EditableLabel extends StackPane {
 
     @FXML
     public void initialize() {
-        label.setVisible(true);
-        textField.setVisible(false);
+        showLabel(false);
+
+        label.setOnMouseClicked(event -> {
+            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
+                showTextField();
+            }
+        });
+
+        textField.setOnAction(event -> {
+            showLabel(false);
+            if (updateCallback != null) {
+                updateCallback.accept(textField.getText().trim());
+            }
+        });
+
+        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+            }
+        });
+
+        textField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                showLabel(true);
+            } else if (event.getCode() == KeyCode.TAB) {
+                showLabel(false);
+                if (updateCallback != null) {
+                    updateCallback.accept(textField.getText().trim());
+                }
+            }
+        });
     }
 
     private void loadFXML() {
@@ -44,11 +77,26 @@ public class EditableLabel extends StackPane {
         }
     }
 
-    public void setText() {
-
+    public void setText(String text) {
+        label.setText(text);
     }
 
-    public void setOnUpdate(Callback<String, Void> callback) {
+    public void setOnUpdate(Consumer<String> callback) {
         updateCallback = callback;
+    }
+
+    private void showLabel(boolean reset) {
+        label.setVisible(true);
+        textField.setVisible(false);
+        label.setText(reset ? oldValue : textField.getText().trim());
+        oldValue = null;
+    }
+
+    private void showTextField() {
+        oldValue = label.getText();
+        label.setVisible(false);
+        textField.setText(label.getText());
+        textField.setVisible(true);
+        textField.requestFocus();
     }
 }

@@ -48,9 +48,9 @@
                   </StackPane>
                   <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1">
                      <children>
-                        <HBox alignment="BOTTOM_LEFT" prefHeight="100.0" prefWidth="200.0">
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                            <children>
-                              <EditableLabel alignment="BOTTOM_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
+                              <EditableLabel fx:id="editableNickname" alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
                               <ComboBox fx:id="statusCb" prefWidth="150.0" />
                            </children>
                         </HBox>

@@ -20,5 +20,6 @@ public class ApplicationData {
     }
 
     private List<UserData> contacts;
+    private UserData user;
 
 }

@@ -139,7 +139,11 @@ public class LoginController extends GuiController {
                         loginPrefs.putBoolean(PREFS_REMEMBER_ME, true);
                     }
 
-                    ApplicationData.getInstance().setContacts(((BootData) msg.getData()).getContactList());
+                    var bootData = (BootData) msg.getData();
+                    var appData = ApplicationData.getInstance();
+                    appData.setContacts(bootData.getContactList());
+                    appData.setUser(bootData.getUser());
+
                     NavigationUtils.openMainWindow(stage, springContext);
                     doneLoading();
                 } else if (msg.getType() == LOGIN_FAILED) {
